@@ -1,8 +1,149 @@
-import React from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 
-const List: React.FC = () =>{
-    return(
-        <h1>List</h1>
+import ContentHeader from '../../Components/ContentHeader';
+import HistoryFinanceCard from '../../Components/HistoryFinanceCard';
+import SelectInput from '../../Components/SelectInput';
+
+import { Container, Content, Filters } from './styles';
+
+import expenses from '../../Repositories/expenses';
+import gains from '../../Repositories/gains';
+import formatCurrency from '../../Utils/formatCurrency';
+import formatDate from '../../Utils/formatDate';
+
+interface IRouteParams {
+    match: {
+        params: {
+            type: string;
+        }
+    }
+};
+
+interface IData {
+    id: string;
+    description: string;
+    amountFormatted: string;
+    frequency: string;
+    dateFormatted: string;
+    tagColor: string;
+};
+
+const List: React.FC<IRouteParams> = ({ match }) => {
+    
+    const [data, setData] = useState<IData[]>([]);
+
+    const [monthSelected, setMonthSelected] = useState<string>(String(new Date().getMonth() + 1));
+    const [yearSelected, setYearSelected] = useState<string>(String(new Date().getFullYear()));
+
+
+    const { type } = match.params;
+
+    const title = useMemo(() => {
+        return type === 'entry-balance' ? {
+            text: 'Entradas',
+            lineColor: '#F7931B'
+        } : {
+            text: 'Saídas',
+            lineColor: '#E44C4E'
+        };
+    }, [type]);
+
+    const listData = useMemo(() => {
+        return type === 'entry-balance' ? gains : expenses;
+    }, [type]);
+
+    const months = [
+        { value: 1, label: "Janeiro" },
+        { value: 2, label: "Fevereiro" },
+        { value: 3, label: "Março" },
+        { value: 4, label: "Abril" },
+        { value: 5, label: "Maio" },
+        { value: 6, label: "Junho" },
+        { value: 7, label: "Julho" },
+        { value: 8, label: "Agosto" },
+        { value: 9, label: "Setembro" },
+        { value: 10, label: "Outubro" },
+        { value: 11, label: "Novembro" },
+        { value: 12, label: "Dezembro" }
+    ];
+
+    const years = [
+        { value: 2020, label: 2020 },
+        { value: 2021, label: 2021 },
+        { value: 2022, label: 2022 },
+        { value: 2023, label: 2023 }
+    ];
+
+    useEffect(() => {
+        const filteredData = listData.filter(
+            item=>{
+                const date = new Date(item.date);
+                const month = String(date.getMonth()+1);
+                const year = String(date.getFullYear());
+
+                
+                return month === monthSelected && year === yearSelected;
+            }
+        );
+
+        const formattedData = filteredData.map(
+            item => {
+                return {
+                    id: String(new Date().getTime() + item.amount),
+                    description: item.description,
+                    amountFormatted: formatCurrency(Number(item.amount)),
+                    frequency: item.frequency,
+                    dateFormatted: formatDate(item.date),
+                    tagColor: item.frequency === 'recorrente' ? '#4E41F0' : '#E44C4E'
+                }
+            }
+        )
+
+        setData(formattedData);
+    }, [listData, monthSelected, yearSelected, data.length])
+
+    return (
+        <Container>
+            <ContentHeader title={title.text} lineColor={title.lineColor}>
+                <SelectInput
+                    defaultValue={monthSelected}
+                    options={months} 
+                    onChange={(e) => setMonthSelected(e.target.value)}
+                />
+                <SelectInput 
+                    defaultValue={yearSelected}
+                    options={years} 
+                    onChange={(e) => setYearSelected(e.target.value)}
+                />
+            </ContentHeader>
+            <Filters>
+                <button
+                    type="button"
+                    className="tag-filter tag-filter-recurrent"
+                >
+                    Recorrentes
+                </button>
+                <button
+                    type="button"
+                    className="tag-filter tag-filter-eventual"
+                >
+                    Eventuais
+                </button>
+            </Filters>
+            <Content>
+                {
+                    data.map(item => (
+                        <HistoryFinanceCard
+                            key={item.id}
+                            tagColor={item.tagColor}
+                            title={item.description}
+                            subtitle={item.dateFormatted}
+                            amount={item.amountFormatted}
+                        />
+                    ))
+                }
+            </Content>
+        </Container>
     );
 }
 
