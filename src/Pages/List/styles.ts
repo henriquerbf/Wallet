@@ -18,10 +18,11 @@ export const Filters = styled.div`
         font-weight: 500;
         background: none;
         color: ${props => props.theme.colors.white};
+        opacity: 0.3;
 
         margin: 0 10px;
 
-        transition: opacity .3s;
+        transition: opacity .4;
 
         :hover {
             opacity: 0.7;
@@ -46,5 +47,9 @@ export const Filters = styled.div`
             margin: 0 auto;
             border-bottom: 5px solid ${props => props.theme.colors.sucess};
         }
+    }
+
+    .tag-actived{
+        opacity: 1;
     }
 `;

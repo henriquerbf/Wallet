@@ -134,14 +134,14 @@ const List: React.FC<IRouteParams> = ({ match }) => {
             <Filters>
                 <button
                     type="button"
-                    className="tag-filter tag-filter-recurrent tag-actived"
+                    className={`tag-filter tag-filter-recurrent ${cardType === 'recorrente' && 'tag-actived'}`}
                     onClick={() => setCardType(cardType === 'recorrente' ? 'todos' : 'recorrente')}
                 >
                     Recorrentes
                 </button>
                 <button
                     type="button"
-                    className="tag-filter tag-filter-eventual tag-actived"
+                    className={`tag-filter tag-filter-eventual ${cardType === 'eventual' && 'tag-actived'}`}
                     onClick={() => setCardType(cardType === 'eventual' ? 'todos' : 'eventual')}
                 >
                     Eventuais
