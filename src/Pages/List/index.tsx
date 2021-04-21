@@ -1,15 +1,17 @@
 import React, {useMemo, useState, useEffect} from 'react';
 
 import ContentHeader from '../../Components/ContentHeader';
-import HistoryFinanceCard from '../../Components/HistoryFinanceCard';
 import SelectInput from '../../Components/SelectInput';
+import HistoryFinanceCard from '../../Components/HistoryFinanceCard';
 
-import { Container, Content, Filters } from './styles';
-
-import expenses from '../../Repositories/expenses';
 import gains from '../../Repositories/gains';
+import expenses from '../../Repositories/expenses';
 import formatCurrency from '../../Utils/formatCurrency';
 import formatDate from '../../Utils/formatDate';
+import monthsList from '../../Utils/months';
+
+import { Container, Content, Filters } from './styles';
+import { uuid } from 'uuidv4';
 
 interface IRouteParams {
     match: {
@@ -34,8 +36,8 @@ const List: React.FC<IRouteParams> = ({ match }) => {
 
     const [monthSelected, setMonthSelected] = useState<string>(String(new Date().getMonth() + 1));
     const [yearSelected, setYearSelected] = useState<string>(String(new Date().getFullYear()));
-
-
+    const [cardType, setCardType] = useState(String('todos'));
+    
     const { type } = match.params;
 
     const title = useMemo(() => {
@@ -52,55 +54,68 @@ const List: React.FC<IRouteParams> = ({ match }) => {
         return type === 'entry-balance' ? gains : expenses;
     }, [type]);
 
-    const months = [
-        { value: 1, label: "Janeiro" },
-        { value: 2, label: "Fevereiro" },
-        { value: 3, label: "Março" },
-        { value: 4, label: "Abril" },
-        { value: 5, label: "Maio" },
-        { value: 6, label: "Junho" },
-        { value: 7, label: "Julho" },
-        { value: 8, label: "Agosto" },
-        { value: 9, label: "Setembro" },
-        { value: 10, label: "Outubro" },
-        { value: 11, label: "Novembro" },
-        { value: 12, label: "Dezembro" }
-    ];
+    const years = useMemo(() => {
+        let uniqueYears: number[] = [];
+        listData.forEach(item => {
+            const date = new Date(item.date);
+            const year = date.getFullYear();
 
-    const years = [
-        { value: 2020, label: 2020 },
-        { value: 2021, label: 2021 },
-        { value: 2022, label: 2022 },
-        { value: 2023, label: 2023 }
-    ];
+            if (!uniqueYears.includes(year)) {
+                uniqueYears.push(year)
+            }
+        })
+
+        return uniqueYears.map(year => {
+            return {
+                label: year,
+                value: year
+            }
+        })
+    }, [listData]);
+
+    const months = useMemo(() => {
+        return monthsList.map((month, index) => {
+            return {
+                value: index + 1,
+                label: month
+            }
+        })
+    }, [listData]);
 
     useEffect(() => {
         const filteredData = listData.filter(
-            item=>{
+            item => {
                 const date = new Date(item.date);
-                const month = String(date.getMonth()+1);
+                const month = String(date.getMonth() + 1);
                 const year = String(date.getFullYear());
 
-                
-                return month === monthSelected && year === yearSelected;
+                if (cardType === 'todos') {
+                    return month === monthSelected
+                        && year === yearSelected;
+                }
+                else {
+                    return month === monthSelected
+                        && year === yearSelected
+                        && item.frequency === cardType
+                }
             }
         );
 
         const formattedData = filteredData.map(
             item => {
                 return {
-                    id: String(new Date().getTime() + item.amount),
+                    id: uuid(),
                     description: item.description,
                     amountFormatted: formatCurrency(Number(item.amount)),
                     frequency: item.frequency,
                     dateFormatted: formatDate(item.date),
-                    tagColor: item.frequency === 'recorrente' ? '#4E41F0' : '#E44C4E'
+                    tagColor: item.frequency === 'recorrente' ? '#E44C4E' : '#4E41F0'
                 }
             }
         )
 
         setData(formattedData);
-    }, [listData, monthSelected, yearSelected, data.length])
+    }, [listData, monthSelected, yearSelected, cardType, data.length])
 
     return (
         <Container>
@@ -119,13 +134,15 @@ const List: React.FC<IRouteParams> = ({ match }) => {
             <Filters>
                 <button
                     type="button"
-                    className="tag-filter tag-filter-recurrent"
+                    className="tag-filter tag-filter-recurrent tag-actived"
+                    onClick={() => setCardType(cardType === 'recorrente' ? 'todos' : 'recorrente')}
                 >
                     Recorrentes
                 </button>
                 <button
                     type="button"
-                    className="tag-filter tag-filter-eventual"
+                    className="tag-filter tag-filter-eventual tag-actived"
+                    onClick={() => setCardType(cardType === 'eventual' ? 'todos' : 'eventual')}
                 >
                     Eventuais
                 </button>
