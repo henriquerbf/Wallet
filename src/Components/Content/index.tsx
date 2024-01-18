@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
 import { Container } from './styles';
 
-const Content: React.FC = ({ children }) =>{
+const Content: React.FC<PropsWithChildren> = ({ children }) =>{
     return(
         <Container>
             {children}
